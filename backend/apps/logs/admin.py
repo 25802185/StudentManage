@@ -1,3 +1,7 @@
 from django.contrib import admin
+from .models import OperationLog
 
-# Register your models here.
+
+@admin.register(OperationLog)
+class OperationLogAdmin(admin.ModelAdmin):
+    list_display = ['user', 'action', 'target', 'created_at']
