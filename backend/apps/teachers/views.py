@@ -4,14 +4,18 @@ from rest_framework.response import Response
 from rest_framework.filters import SearchFilter
 from .models import Teacher
 from .serializers import TeacherSerializer, TeacherCreateSerializer
-from apps.users.permissions import IsAdmin
+from apps.users.permissions import IsAdmin, IsAdminOrTeacher
 
 
 class TeacherViewSet(ModelViewSet):
     queryset = Teacher.objects.select_related('user', 'class_ref').all()
     filter_backends = [SearchFilter]
     search_fields = ['name', 'teacher_no']
-    permission_classes = [IsAdmin]
+
+    def get_permissions(self):
+        if self.action in ['list', 'retrieve']:
+            return [IsAdminOrTeacher()]
+        return [IsAdmin()]
 
     def get_serializer_class(self):
         if self.action == 'create':
