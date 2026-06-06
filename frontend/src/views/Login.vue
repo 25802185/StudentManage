@@ -1,54 +1,46 @@
 <template>
   <div class="login-container">
-    <!-- 左侧：登录卡片 -->
-    <div class="login-left">
-      <div class="login-card">
-        <div class="login-logo">
-          <img src="../assets/logo.png" alt="Logo" class="logo-img" />
-        </div>
-        <h2 class="login-title">学生信息管理系统</h2>
-        <p class="login-subtitle">Student Information Management System</p>
-        <el-form :model="form" @submit.prevent="handleLogin" class="login-form">
-          <el-form-item>
-            <el-input
-              v-model="form.username"
-              placeholder="请输入账号"
-              size="large"
-              prefix-icon="User"
-            />
-          </el-form-item>
-          <el-form-item>
-            <el-input
-              v-model="form.password"
-              type="password"
-              placeholder="请输入密码"
-              size="large"
-              prefix-icon="Lock"
-              show-password
-            />
-          </el-form-item>
-          <el-form-item>
-            <el-button
-              type="primary"
-              class="login-btn"
-              :loading="loading"
-              native-type="submit"
-              size="large"
-            >
-              登 录
-            </el-button>
-          </el-form-item>
-        </el-form>
-      </div>
-    </div>
+    <!-- 背景图 -->
+    <img src="../assets/login-bg.png" alt="" class="bg-img" />
 
-    <!-- 右侧：装饰图 -->
-    <div class="login-right">
-      <img src="../assets/login-bg.png" alt="Decor" class="decor-img" />
-      <div class="right-text">
-        <h3>欢迎使用学生信息管理系统</h3>
-        <p>高效管理 · 智能分析 · 便捷操作</p>
+    <!-- 登录卡片放在右侧空白区域 -->
+    <div class="login-card">
+      <div class="card-header">
+        <img src="../assets/logo.png" alt="Logo" class="card-logo" />
+        <h2 class="card-title">学生信息管理系统</h2>
+        <p class="card-subtitle">Student Information Management System</p>
       </div>
+      <el-form :model="form" @submit.prevent="handleLogin" class="login-form">
+        <el-form-item>
+          <el-input
+            v-model="form.username"
+            placeholder="请输入账号"
+            size="large"
+            prefix-icon="User"
+          />
+        </el-form-item>
+        <el-form-item>
+          <el-input
+            v-model="form.password"
+            type="password"
+            placeholder="请输入密码"
+            size="large"
+            prefix-icon="Lock"
+            show-password
+          />
+        </el-form-item>
+        <el-form-item>
+          <el-button
+            type="primary"
+            class="login-btn"
+            :loading="loading"
+            native-type="submit"
+            size="large"
+          >
+            登 录
+          </el-button>
+        </el-form-item>
+      </el-form>
     </div>
   </div>
 </template>
@@ -83,55 +75,60 @@ const handleLogin = async () => {
 
 <style scoped>
 .login-container {
-  display: flex;
+  position: relative;
+  width: 100vw;
   height: 100vh;
   overflow: hidden;
+  background: #e8f0fe;
 }
 
-.login-left {
-  flex: 1;
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  background: #f0f2f5;
+.bg-img {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  object-position: left center;
 }
 
 .login-card {
-  width: 420px;
-  padding: 50px 40px;
-  background: #fff;
+  position: absolute;
+  right: 8%;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 380px;
+  padding: 40px 36px;
+  background: rgba(255, 255, 255, 0.95);
   border-radius: 16px;
-  box-shadow: 0 8px 40px rgba(0, 0, 0, 0.08);
+  box-shadow: 0 8px 40px rgba(0, 0, 0, 0.12);
+  backdrop-filter: blur(10px);
 }
 
-.login-logo {
+.card-header {
   text-align: center;
-  margin-bottom: 16px;
+  margin-bottom: 30px;
 }
 
-.logo-img {
-  width: 80px;
-  height: 80px;
+.card-logo {
+  width: 64px;
+  height: 64px;
   object-fit: contain;
+  margin-bottom: 12px;
 }
 
-.login-title {
-  text-align: center;
-  font-size: 22px;
+.card-title {
+  font-size: 20px;
   font-weight: 600;
   color: #303133;
   margin: 0 0 6px 0;
 }
 
-.login-subtitle {
-  text-align: center;
-  font-size: 12px;
+.card-subtitle {
+  font-size: 11px;
   color: #909399;
-  margin: 0 0 36px 0;
-}
-
-.login-form {
-  width: 100%;
+  margin: 0;
+  letter-spacing: 1px;
 }
 
 .login-form :deep(.el-input__wrapper) {
@@ -151,44 +148,5 @@ const handleLogin = async () => {
 
 .login-btn:hover {
   background: linear-gradient(135deg, #66b1ff 0%, #409eff 100%);
-}
-
-.login-right {
-  width: 50%;
-  display: flex;
-  flex-direction: column;
-  justify-content: center;
-  align-items: center;
-  background: linear-gradient(135deg, #e8f4fd 0%, #d6eaf8 50%, #e8f0fe 100%);
-  position: relative;
-  overflow: hidden;
-}
-
-.decor-img {
-  width: 85%;
-  max-width: 600px;
-  object-fit: contain;
-  z-index: 1;
-}
-
-.right-text {
-  position: absolute;
-  bottom: 60px;
-  text-align: center;
-  z-index: 2;
-}
-
-.right-text h3 {
-  font-size: 20px;
-  font-weight: 600;
-  color: #2c6fbb;
-  margin: 0 0 8px 0;
-}
-
-.right-text p {
-  font-size: 14px;
-  color: #5a9fd4;
-  margin: 0;
-  letter-spacing: 2px;
 }
 </style>
