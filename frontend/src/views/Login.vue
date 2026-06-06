@@ -3,7 +3,7 @@
     <!-- 背景图 -->
     <img src="../assets/login-bg.png" alt="" class="bg-img" />
 
-    <!-- 登录卡片放在右侧空白区域 -->
+    <!-- 居中登录卡片 -->
     <div class="login-card">
       <div class="card-header">
         <img src="../assets/logo.png" alt="Logo" class="card-logo" />
@@ -79,7 +79,7 @@ const handleLogin = async () => {
   width: 100vw;
   height: 100vh;
   overflow: hidden;
-  background: #e8f0fe;
+  background: #e8f4fd;
 }
 
 .bg-img {
@@ -89,50 +89,55 @@ const handleLogin = async () => {
   width: 100%;
   height: 100%;
   object-fit: cover;
-  object-position: left center;
 }
 
 .login-card {
   position: absolute;
-  right: 8%;
   top: 50%;
-  transform: translateY(-50%);
-  width: 380px;
-  padding: 40px 36px;
-  background: rgba(255, 255, 255, 0.95);
+  left: 50%;
+  transform: translate(-50%, -50%);
+  width: 400px;
+  padding: 44px 40px;
+  background: rgba(255, 255, 255, 0.88);
   border-radius: 16px;
-  box-shadow: 0 8px 40px rgba(0, 0, 0, 0.12);
-  backdrop-filter: blur(10px);
+  border: 1px solid rgba(255, 255, 255, 0.6);
+  box-shadow: 0 12px 48px rgba(64, 120, 210, 0.18);
+  backdrop-filter: blur(12px);
 }
 
 .card-header {
   text-align: center;
-  margin-bottom: 30px;
+  margin-bottom: 32px;
 }
 
 .card-logo {
   width: 64px;
   height: 64px;
   object-fit: contain;
-  margin-bottom: 12px;
+  margin-bottom: 14px;
 }
 
 .card-title {
   font-size: 20px;
   font-weight: 600;
-  color: #303133;
+  color: #1a3a5c;
   margin: 0 0 6px 0;
 }
 
 .card-subtitle {
   font-size: 11px;
-  color: #909399;
+  color: #6a9fc8;
   margin: 0;
   letter-spacing: 1px;
 }
 
 .login-form :deep(.el-input__wrapper) {
   border-radius: 8px;
+  box-shadow: 0 0 0 1px #d4e6f6 inset;
+}
+
+.login-form :deep(.el-input__wrapper:hover) {
+  box-shadow: 0 0 0 1px #409eff inset;
 }
 
 .login-btn {
@@ -142,11 +147,11 @@ const handleLogin = async () => {
   font-size: 16px;
   font-weight: 500;
   letter-spacing: 4px;
-  background: linear-gradient(135deg, #409eff 0%, #337ecc 100%);
+  background: linear-gradient(135deg, #4a9eff 0%, #2b7de9 100%);
   border: none;
 }
 
 .login-btn:hover {
-  background: linear-gradient(135deg, #66b1ff 0%, #409eff 100%);
+  background: linear-gradient(135deg, #6db3ff 0%, #4a9eff 100%);
 }
 </style>
