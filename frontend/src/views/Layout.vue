@@ -1,8 +1,9 @@
 <template>
   <el-container style="height: 100vh">
     <el-aside width="220px" style="background: #304156">
-      <div style="height: 60px; display: flex; align-items: center; justify-content: center; color: #fff; font-size: 18px; font-weight: bold">
-        学生信息管理系统
+      <div class="sidebar-logo">
+        <img src="../assets/logo.png" alt="Logo" style="width: 36px; height: 36px; object-fit: contain; border-radius: 6px" />
+        <span class="sidebar-title">学生信息管理</span>
       </div>
       <el-menu
         :default-active="$route.path"
@@ -64,3 +65,21 @@ const handleCommand = (cmd) => {
   }
 }
 </script>
+
+<style scoped>
+.sidebar-logo {
+  height: 60px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  padding: 0 16px;
+}
+
+.sidebar-title {
+  color: #fff;
+  font-size: 16px;
+  font-weight: 600;
+  white-space: nowrap;
+}
+</style>
