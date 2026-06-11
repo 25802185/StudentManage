@@ -8,4 +8,59 @@ html, body, #app {
   width: 100%;
   height: 100%;
   overflow: hidden;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'PingFang SC', 'Hiragino Sans GB', 'Microsoft YaHei', sans-serif;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+body {
+  background: #f7f8fc;
+}
+
+/* Morandi 主题色变量 */
+:root {
+  --haze-blue: #6388a0;
+  --mint-green: #b7d9c8;
+  --nude-pink: #e9c9bc;
+  --soft-lavender: #c5b8d9;
+  --bg-gray: #f7f8fc;
+  --sidebar-dark: #3a4f63;
+}
+
+/* Element Plus 全局覆盖 */
+.el-card {
+  border-radius: 14px !important;
+  border: none !important;
+  box-shadow: 0 2px 12px rgba(0, 0, 0, 0.04) !important;
+}
+
+.el-button--primary {
+  background: linear-gradient(135deg, #6388a0 0%, #7a9ab4 100%) !important;
+  border: none !important;
+  border-radius: 8px !important;
+}
+
+.el-button--primary:hover {
+  background: linear-gradient(135deg, #577a92 0%, #6388a0 100%) !important;
+}
+
+.el-tag {
+  border-radius: 6px !important;
+}
+
+.el-input__wrapper {
+  border-radius: 8px !important;
+}
+
+.el-table {
+  border-radius: 12px !important;
+  overflow: hidden;
+}
+
+.el-pagination {
+  --el-pagination-button-bg-color: #fff;
+}
+
+.el-dialog {
+  border-radius: 16px !important;
 }

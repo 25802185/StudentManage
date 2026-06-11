@@ -5,6 +5,7 @@ export const menuConfig = {
     { path: '/teachers', icon: 'Avatar', title: '教师管理' },
     { path: '/classes', icon: 'School', title: '班级管理' },
     { path: '/courses', icon: 'Reading', title: '课程管理' },
+    { path: '/semesters', icon: 'Calendar', title: '学期管理' },
     { path: '/scores', icon: 'Document', title: '成绩管理' },
     { path: '/info-changes', icon: 'Checked', title: '信息审核' },
     { path: '/logs', icon: 'List', title: '操作日志' },

@@ -1,4 +1,5 @@
 from django.core.management.base import BaseCommand
+from django.utils import timezone
 from apps.users.models import User
 from apps.classes.models import ClassInfo
 from apps.teachers.models import Teacher
@@ -145,20 +146,29 @@ class Command(BaseCommand):
             ],
         }
 
-        for cls in classes:
+        # 创建学期
+        from apps.courses.models import Semester
+        sem_names = ['2025-2026-1', '2024-2025-2']
+        sem_map = {}
+        for i, name in enumerate(sem_names):
+            sem, _ = Semester.objects.get_or_create(name=name, defaults={'is_current': i == 0})
+            sem_map[name] = sem
+
+        semesters = ['2025-2026-1', '2025-2026-1', '2024-2025-2', '2025-2026-1']
+        for idx, cls in enumerate(classes):
             for course_name, credit in courses_data.get(cls.name, []):
                 Course.objects.get_or_create(
                     name=course_name, class_ref=cls,
                     defaults={
                         'credit': credit,
                         'teacher': cls.teachers.first(),
+                        'semester': sem_map[semesters[idx]],
                         'description': f'{cls.name}的{course_name}课程',
                     },
                 )
             self.stdout.write(f'{cls.name}: 创建 {len(courses_data.get(cls.name, []))} 门课程')
 
         # 为部分学生成绩打分
-        semester = '2025-2026-1'
         score_count = 0
         for cls in classes:
             courses = cls.courses.all()
@@ -166,10 +176,69 @@ class Command(BaseCommand):
             for course in courses:
                 for student in students:
                     Score.objects.get_or_create(
-                        student=student, course=course, semester=semester,
+                        student=student, course=course,
                         defaults={'score': round(random.uniform(50, 100), 1)},
                     )
                     score_count += 1
         self.stdout.write(f'创建 {score_count} 条成绩记录')
+
+        # 创建信息修改申请
+        from apps.students.models import InfoChangeRequest
+        from apps.logs.models import OperationLog
+        from datetime import timedelta
+
+        students = list(Student.objects.all()[:10])
+        fields = ['phone', 'email', 'address']
+        old_values = ['13800000000', 'old@stu.edu.cn', '旧地址']
+        new_values = ['13912345678', 'new@stu.edu.cn', '新地址XX省XX市XX区']
+        statuses = ['pending', 'approved', 'rejected', 'approved', 'pending']
+
+        review_count = 0
+        for i, student in enumerate(students):
+            field_idx = i % len(fields)
+            InfoChangeRequest.objects.get_or_create(
+                student=student,
+                field_name=fields[field_idx],
+                old_value=old_values[field_idx],
+                new_value=new_values[field_idx],
+                defaults={
+                    'status': statuses[i % len(statuses)],
+                    'remark': '信息需要更新' if statuses[i % len(statuses)] != 'pending' else '',
+                    'created_at': timezone.now() - timedelta(hours=i * 3),
+                },
+            )
+            review_count += 1
+        self.stdout.write(f'创建 {review_count} 条信息修改申请')
+
+        # 创建操作日志
+        log_data = [
+            {'action': '新增', 'target': '学生', 'detail': '新增了学生数据'},
+            {'action': '修改', 'target': '学生', 'detail': '修改了学生数据'},
+            {'action': '删除', 'target': '课程', 'detail': '删除了课程记录'},
+            {'action': '新增', 'target': '教师', 'detail': '新增了教师数据'},
+            {'action': '修改', 'target': '班级', 'detail': '修改了班级数据'},
+            {'action': '新增', 'target': '成绩', 'detail': '新增了成绩数据'},
+            {'action': '修改', 'target': '信息审核', 'detail': '审核通过了信息修改申请'},
+            {'action': '删除', 'target': '学生', 'detail': '删除了学生记录'},
+            {'action': '新增', 'target': '课程', 'detail': '新增了课程数据'},
+            {'action': '修改', 'target': '成绩', 'detail': '修改了成绩数据'},
+            {'action': '新增', 'target': '班级', 'detail': '新增了班级数据'},
+            {'action': '修改', 'target': '教师', 'detail': '修改了教师数据'},
+        ]
+        log_count = 0
+        admin_user = User.objects.filter(username='admin').first()
+        for i, data in enumerate(log_data):
+            OperationLog.objects.get_or_create(
+                user=admin_user,
+                action=data['action'],
+                target=data['target'],
+                detail=data['detail'],
+                defaults={
+                    'ip_address': '192.168.1.' + str(100 + i),
+                    'created_at': timezone.now() - timedelta(minutes=i * 15),
+                },
+            )
+            log_count += 1
+        self.stdout.write(f'创建 {log_count} 条操作日志')
 
         self.stdout.write(self.style.SUCCESS('测试数据创建完成！'))

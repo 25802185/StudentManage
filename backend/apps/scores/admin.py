@@ -4,4 +4,4 @@ from .models import Score
 
 @admin.register(Score)
 class ScoreAdmin(admin.ModelAdmin):
-    list_display = ['student', 'course', 'score', 'semester']
+    list_display = ['student', 'course', 'score']

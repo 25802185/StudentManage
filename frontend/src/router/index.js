@@ -1,12 +1,23 @@
 import { createRouter, createWebHistory } from 'vue-router'
 import { useUserStore } from '../store/user'
 
+// 各角色允许访问的路由前缀
+const roleAccess = {
+  admin: ['/dashboard', '/students', '/teachers', '/classes', '/courses', '/semesters', '/scores', '/info-changes', '/logs', '/profile', '/change-password'],
+  teacher: ['/dashboard', '/students', '/courses', '/scores', '/info-changes', '/profile', '/change-password'],
+  student: ['/scores', '/my-applications', '/profile', '/change-password'],
+}
+
 const routes = [
   { path: '/login', component: () => import('../views/Login.vue'), meta: { public: true } },
   {
     path: '/',
     component: () => import('../views/Layout.vue'),
-    redirect: '/dashboard',
+    redirect: (to) => {
+      const store = useUserStore()
+      if (store.userInfo?.role === 'student') return '/scores'
+      return '/dashboard'
+    },
     children: [
       { path: 'dashboard', component: () => import('../views/Dashboard.vue'), meta: { title: '仪表盘' } },
       { path: 'students', component: () => import('../views/students/StudentList.vue'), meta: { title: '学生管理' } },
@@ -14,6 +25,7 @@ const routes = [
       { path: 'teachers', component: () => import('../views/teachers/TeacherList.vue'), meta: { title: '教师管理' } },
       { path: 'classes', component: () => import('../views/classes/ClassList.vue'), meta: { title: '班级管理' } },
       { path: 'courses', component: () => import('../views/courses/CourseList.vue'), meta: { title: '课程管理' } },
+      { path: 'semesters', component: () => import('../views/semesters/SemesterList.vue'), meta: { title: '学期管理' } },
       { path: 'scores', component: () => import('../views/scores/ScoreList.vue'), meta: { title: '成绩管理' } },
       { path: 'scores/entry/:courseId', component: () => import('../views/scores/ScoreEntry.vue'), meta: { title: '成绩录入' } },
       { path: 'info-changes', component: () => import('../views/info-changes/InfoChangeList.vue'), meta: { title: '信息审核' } },
@@ -39,6 +51,15 @@ router.beforeEach(async (to, from, next) => {
     } catch {
       return next('/login')
     }
+  }
+  // 角色权限检查
+  const role = store.userInfo?.role
+  const allowed = roleAccess[role] || []
+  const matched = allowed.some(prefix => to.path === prefix || to.path.startsWith(prefix + '/'))
+  if (!matched) {
+    // 无权限，跳转到该角色的默认页
+    if (role === 'student') return next('/scores')
+    return next('/dashboard')
   }
   next()
 })

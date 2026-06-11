@@ -21,10 +21,11 @@ class StudentCreateSerializer(serializers.Serializer):
     name = serializers.CharField(max_length=20)
     gender = serializers.ChoiceField(choices=[('male', '男'), ('female', '女')])
     age = serializers.IntegerField(required=False, allow_null=True)
-    class_ref_id = serializers.IntegerField(required=False, allow_null=True)
+    class_ref = serializers.IntegerField(required=False, allow_null=True)
     phone = serializers.CharField(max_length=20, required=False, default='')
     email = serializers.EmailField(required=False, default='')
     address = serializers.CharField(max_length=200, required=False, default='')
+    password = serializers.CharField(max_length=128, required=False, write_only=True)
 
     def validate_student_no(self, value):
         if Student.objects.filter(student_no=value).exists():
@@ -33,10 +34,11 @@ class StudentCreateSerializer(serializers.Serializer):
 
     def create(self, validated_data):
         from apps.classes.models import ClassInfo
-        class_ref_id = validated_data.pop('class_ref_id', None)
+        class_ref_id = validated_data.pop('class_ref', None)
+        custom_password = validated_data.pop('password', None)
         class_ref = ClassInfo.objects.filter(id=class_ref_id).first() if class_ref_id else None
         username = validated_data['student_no']
-        password = username[-6:]
+        password = custom_password if custom_password else username[-6:]
         user = User.objects.create_user(
             username=username, password=password, role='student', is_active=True,
         )
@@ -44,6 +46,7 @@ class StudentCreateSerializer(serializers.Serializer):
         if class_ref:
             class_ref.student_count = class_ref.students.count()
             class_ref.save()
+        student._generated_password = password
         return student
 
 
@@ -62,4 +65,4 @@ class InfoChangeRequestSerializer(serializers.ModelSerializer):
             'id', 'student', 'student_name', 'field_name', 'old_value',
             'new_value', 'status', 'reviewer', 'review_time', 'remark', 'created_at',
         ]
-        read_only_fields = ['id', 'status', 'reviewer', 'review_time', 'created_at']
+        read_only_fields = ['id', 'student', 'status', 'reviewer', 'review_time', 'created_at']

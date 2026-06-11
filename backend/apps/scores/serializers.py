@@ -6,6 +6,7 @@ class ScoreSerializer(serializers.ModelSerializer):
     student_name = serializers.CharField(source='student.name', read_only=True)
     student_no = serializers.CharField(source='student.student_no', read_only=True)
     course_name = serializers.CharField(source='course.name', read_only=True)
+    semester = serializers.CharField(source='course.semester.name', read_only=True)
 
     class Meta:
         model = Score
@@ -17,9 +18,11 @@ class ScoreSerializer(serializers.ModelSerializer):
         read_only_fields = ['id', 'created_at', 'updated_at']
 
 
+class ScoreItemSerializer(serializers.Serializer):
+    student = serializers.IntegerField()
+    score = serializers.FloatField(min_value=0, max_value=100)
+
+
 class ScoreBatchSerializer(serializers.Serializer):
     course = serializers.IntegerField()
-    semester = serializers.CharField(max_length=20)
-    scores = serializers.ListField(
-        child=serializers.DictField(), help_text='[{"student": id, "score": float}, ...]'
-    )
+    scores = ScoreItemSerializer(many=True)

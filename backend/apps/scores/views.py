@@ -9,10 +9,12 @@ from rest_framework import status as http_status
 from django_filters.rest_framework import DjangoFilterBackend
 import openpyxl
 
+from rest_framework.permissions import IsAuthenticated
 from .models import Score
 from .serializers import ScoreSerializer, ScoreBatchSerializer
 from apps.users.permissions import IsAdminOrTeacher
 from apps.courses.models import Course
+from apps.courses.serializers import CourseSerializer
 from apps.students.models import Student
 
 
@@ -20,9 +22,16 @@ class ScoreViewSet(ModelViewSet):
     queryset = Score.objects.select_related('student', 'course').all()
     serializer_class = ScoreSerializer
     filter_backends = [DjangoFilterBackend, SearchFilter, OrderingFilter]
-    filterset_fields = ['course', 'student', 'semester']
+    filterset_fields = ['course', 'student', 'course__semester', 'student__class_ref']
     search_fields = ['student__name', 'student__student_no', 'course__name']
     ordering_fields = ['score', 'created_at']
+
+    def get_permissions(self):
+        if self.action in ['my_courses']:
+            return [IsAuthenticated()]
+        if self.action in ['list', 'retrieve', 'export_excel']:
+            return [IsAuthenticated()]
+        return [IsAdminOrTeacher()]
 
     def get_queryset(self):
         qs = super().get_queryset()
@@ -30,7 +39,7 @@ class ScoreViewSet(ModelViewSet):
         if user.role == 'student':
             return qs.filter(student__user=user)
         if user.role == 'teacher' and hasattr(user, 'teacher_profile'):
-            return qs.filter(student__class_ref=user.teacher_profile.class_ref)
+            qs = qs.filter(student__class_ref=user.teacher_profile.class_ref)
         return qs
 
     @action(detail=False, methods=['post'], url_path='batch')
@@ -38,17 +47,35 @@ class ScoreViewSet(ModelViewSet):
         serializer = ScoreBatchSerializer(data=request.data)
         serializer.is_valid(raise_exception=True)
         data = serializer.validated_data
-        course = Course.objects.get(id=data['course'])
-        created = 0
+        try:
+            course = Course.objects.get(id=data['course'])
+        except Course.DoesNotExist:
+            return Response({'detail': '课程不存在'}, status=400)
+        created, updated = 0, 0
         for item in data['scores']:
-            student = Student.objects.get(id=item['student'])
+            try:
+                student = Student.objects.get(id=item['student'])
+            except Student.DoesNotExist:
+                continue
             _, is_new = Score.objects.update_or_create(
-                student=student, course=course, semester=data['semester'],
+                student=student, course=course,
                 defaults={'score': item['score']},
             )
             if is_new:
                 created += 1
-        return Response({'detail': f'录入 {created} 条成绩'})
+            else:
+                updated += 1
+        return Response({'detail': f'新增 {created} 条，更新 {updated} 条成绩'})
+
+    @action(detail=False, methods=['get'], url_path='my-courses')
+    def my_courses(self, request):
+        student = Student.objects.filter(user=request.user).first()
+        if not student:
+            return Response([])
+        course_ids = Score.objects.filter(student=student).values_list('course_id', flat=True).distinct()
+        courses = Course.objects.filter(id__in=course_ids)
+        serializer = CourseSerializer(courses, many=True)
+        return Response(serializer.data)
 
     @action(detail=False, methods=['get'], url_path='export')
     def export_excel(self, request):
@@ -64,7 +91,7 @@ class ScoreViewSet(ModelViewSet):
         for s in qs:
             ws.append([
                 s.student.student_no, s.student.name,
-                s.course.name, s.score, s.semester,
+                s.course.name, s.score, s.course.semester.name,
             ])
         output = io.BytesIO()
         wb.save(output)

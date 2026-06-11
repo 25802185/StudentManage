@@ -15,6 +15,7 @@ from .serializers import (
     StudentSerializer, StudentCreateSerializer, StudentUpdateSerializer,
     InfoChangeRequestSerializer,
 )
+from rest_framework.permissions import IsAuthenticated
 from apps.users.permissions import IsAdminOrTeacher, IsAdmin
 from apps.users.models import User
 
@@ -27,7 +28,19 @@ class StudentViewSet(ModelViewSet):
     ordering_fields = ['student_no', 'name']
 
     def get_permissions(self):
+        if self.action == 'my_info':
+            return [IsAuthenticated()]
         return [IsAdminOrTeacher()]
+
+    def create(self, request, *args, **kwargs):
+        serializer = self.get_serializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        student = serializer.save()
+        return Response({
+            'detail': '新增成功',
+            'password': student._generated_password,
+            'username': student.student_no,
+        }, status=http_status.HTTP_201_CREATED)
 
     def get_serializer_class(self):
         if self.action == 'create':
@@ -40,8 +53,25 @@ class StudentViewSet(ModelViewSet):
         qs = super().get_queryset()
         user = self.request.user
         if user.role == 'teacher' and hasattr(user, 'teacher_profile'):
-            qs = qs.filter(class_ref=user.teacher_profile.class_ref)
+            class_ref = self.request.query_params.get('class_ref')
+            if class_ref:
+                qs = qs.filter(class_ref_id=class_ref)
+            else:
+                qs = qs.filter(class_ref=user.teacher_profile.class_ref)
         return qs
+
+    @action(detail=False, methods=['get', 'put'], url_path='my-info')
+    def my_info(self, request):
+        student = Student.objects.filter(user=request.user).select_related('class_ref').first()
+        if not student:
+            return Response({'detail': '未找到学生信息'}, status=404)
+        if request.method == 'PUT':
+            for field in ['phone', 'email', 'address']:
+                if field in request.data:
+                    setattr(student, field, request.data[field])
+            student.save()
+        serializer = StudentSerializer(student)
+        return Response(serializer.data)
 
     @action(detail=False, methods=['get'], url_path='export')
     def export_excel(self, request):
@@ -96,12 +126,27 @@ class StudentViewSet(ModelViewSet):
                 class_ref=class_ref, phone=str(phone), email=str(email), address=str(address),
             )
             created += 1
+        # 更新相关班级的学生人数
+        from apps.classes.models import ClassInfo
+        for cls in ClassInfo.objects.all():
+            cls.student_count = cls.students.count()
+            cls.save()
         return Response({'detail': f'成功导入 {created} 条'})
+
+
+ALLOWED_CHANGE_FIELDS = ['phone', 'email', 'address']
 
 
 class InfoChangeRequestViewSet(ModelViewSet):
     queryset = InfoChangeRequest.objects.select_related('student', 'reviewer').all()
     serializer_class = InfoChangeRequestSerializer
+    filter_backends = [DjangoFilterBackend]
+    filterset_fields = ['status']
+
+    def get_permissions(self):
+        if self.action in ['approve', 'reject']:
+            return [IsAdminOrTeacher()]
+        return [IsAuthenticated()]
 
     def get_queryset(self):
         qs = super().get_queryset()
@@ -114,6 +159,9 @@ class InfoChangeRequestViewSet(ModelViewSet):
 
     def perform_create(self, serializer):
         student = Student.objects.get(user=self.request.user)
+        field_name = self.request.data.get('field_name', '')
+        if field_name and field_name not in ALLOWED_CHANGE_FIELDS:
+            return Response({'detail': f'不允许修改字段 {field_name}'}, status=400)
         student.status = 'pending'
         student.save()
         serializer.save(student=student)
@@ -121,6 +169,8 @@ class InfoChangeRequestViewSet(ModelViewSet):
     @action(detail=True, methods=['put'], url_path='approve')
     def approve(self, request, pk=None):
         change = self.get_object()
+        if change.field_name not in ALLOWED_CHANGE_FIELDS:
+            return Response({'detail': '不允许修改该字段'}, status=400)
         change.status = 'approved'
         change.reviewer = request.user
         change.review_time = timezone.now()
